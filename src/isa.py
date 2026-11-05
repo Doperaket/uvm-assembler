@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 ADDRESS_BITS = 30
 ADDRESS_SPACE = 1 << ADDRESS_BITS
+OPCODE_MASK = 0xF
 FIELD_B_SHIFT = 4
 FIELD_C_SHIFT = 34
 
@@ -46,3 +47,13 @@ def encode(instruction):
         | instruction.c << FIELD_C_SHIFT
     )
     return word.to_bytes(fmt.size, "little")
+
+
+def decode(code):
+    """Переводит машинный код команды в промежуточное представление."""
+    word = int.from_bytes(code, "little")
+    opcode = word & OPCODE_MASK
+    fmt = BY_OPCODE[opcode]
+    b_value = (word >> FIELD_B_SHIFT) & (ADDRESS_SPACE - 1)
+    c_value = (word >> FIELD_C_SHIFT) & ((1 << fmt.c_bits) - 1)
+    return Instruction(opcode, b_value, c_value)
