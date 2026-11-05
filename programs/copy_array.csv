@@ -1,0 +1,16 @@
+op,b,c
+load,200,11
+load,201,22
+load,202,33
+load,203,44
+load,204,1023
+read,200,300
+read,201,301
+read,202,302
+read,203,303
+read,204,304
+write,300,400
+write,301,401
+write,302,402
+write,303,403
+write,304,404
