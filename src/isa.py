@@ -4,6 +4,8 @@ from dataclasses import dataclass
 
 ADDRESS_BITS = 30
 ADDRESS_SPACE = 1 << ADDRESS_BITS
+FIELD_B_SHIFT = 4
+FIELD_C_SHIFT = 34
 
 
 @dataclass(frozen=True)
@@ -33,3 +35,14 @@ class Instruction:
     a: int
     b: int
     c: int
+
+
+def encode(instruction):
+    """Переводит команду в машинный код с порядком байт little-endian."""
+    fmt = BY_OPCODE[instruction.a]
+    word = (
+        instruction.a
+        | instruction.b << FIELD_B_SHIFT
+        | instruction.c << FIELD_C_SHIFT
+    )
+    return word.to_bytes(fmt.size, "little")
