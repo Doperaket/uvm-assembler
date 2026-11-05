@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import math
 import sys
 from pathlib import Path
 
@@ -11,6 +12,7 @@ BYTE_RANGE = range(1 << 8)
 OP_LOAD = BY_MNEMONIC["load"].opcode
 OP_READ = BY_MNEMONIC["read"].opcode
 OP_WRITE = BY_MNEMONIC["write"].opcode
+OP_SQRT = BY_MNEMONIC["sqrt"].opcode
 
 
 class VmError(Exception):
@@ -54,17 +56,24 @@ def execute_copy(memory, instruction):
     memory.write(instruction.c, memory.read(instruction.b))
 
 
+def execute_sqrt(memory, instruction):
+    """Целый квадратный корень: mem[mem[C]] = isqrt(mem[mem[B]])."""
+    operand = memory.read(memory.read(instruction.b))
+    memory.write(memory.read(instruction.c), math.isqrt(operand))
+
+
 EXECUTORS = {
     OP_LOAD: execute_load,
     OP_READ: execute_copy,
     OP_WRITE: execute_copy,
+    OP_SQRT: execute_sqrt,
 }
 
 
 def fetch(memory, counter, end):
     """Читает из памяти машинный код команды по адресу counter."""
     fmt = BY_OPCODE.get(memory.read(counter) & OPCODE_MASK)
-    if fmt is None or fmt.opcode not in EXECUTORS:
+    if fmt is None:
         raise VmError(f"адрес {counter}: неизвестная команда")
     if counter + fmt.size > end:
         raise VmError(f"адрес {counter}: команда обрезана")
