@@ -1,4 +1,4 @@
-"""Ассемблер УВМ: переводит программу из CSV в промежуточное представление."""
+"""Ассемблер УВМ: переводит программу из CSV в машинный код."""
 
 import argparse
 import csv
@@ -6,7 +6,7 @@ import io
 import sys
 from pathlib import Path
 
-from isa import ADDRESS_BITS, BY_MNEMONIC, Instruction
+from isa import ADDRESS_BITS, BY_MNEMONIC, Instruction, encode
 
 HEADER = ["op", "b", "c"]
 
@@ -56,9 +56,14 @@ def parse_program(text):
     return program
 
 
-def format_fields(instruction):
-    """Возвращает поля команды в виде из спецификации."""
-    return f"A={instruction.a}, B={instruction.b}, C={instruction.c}"
+def format_bytes(code):
+    """Возвращает машинный код команды в виде из спецификации."""
+    return ", ".join(f"0x{byte:02X}" for byte in code)
+
+
+def assemble(program):
+    """Переводит промежуточное представление в машинный код команд."""
+    return [encode(instruction) for instruction in program]
 
 
 def parse_args(argv):
@@ -77,13 +82,15 @@ def main(argv=None):
     args = parse_args(argv)
     try:
         text = Path(args.source).read_text(encoding="utf-8-sig")
-        program = parse_program(text)
+        codes = assemble(parse_program(text))
+        Path(args.output).write_bytes(b"".join(codes))
     except (OSError, AssemblerError) as error:
         print(f"Ошибка: {error}", file=sys.stderr)
         return 1
     if args.test:
-        for instruction in program:
-            print(format_fields(instruction))
+        for code in codes:
+            print(format_bytes(code))
+    print(f"Ассемблировано команд: {len(codes)}")
     return 0
 
 
