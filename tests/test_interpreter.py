@@ -110,6 +110,39 @@ class RunTest(unittest.TestCase):
             run(program)
 
 
+class SqrtTest(unittest.TestCase):
+    """Проверки команды sqrt и косвенной адресации."""
+
+    def test_demo_program_stores_result_in_memory(self):
+        memory = run_file("sqrt_demo.csv")
+        self.assertEqual(memory.read(300), 12)
+        self.assertEqual(memory.read(200), 144)
+
+    def test_result_is_rounded_down(self):
+        cases = {0: 0, 1: 1, 2: 1, 3: 1, 4: 2, 143: 11, 1023: 31}
+        for operand, root in cases.items():
+            text = (
+                f"op,b,c\nload,200,{operand}\nload,400,200\n"
+                "load,401,300\nsqrt,400,401\n"
+            )
+            with self.subTest(operand):
+                self.assertEqual(run(build(text)).read(300), root)
+
+    def test_addresses_are_taken_from_memory(self):
+        text = (
+            "op,b,c\nload,200,81\nload,201,16\nload,400,201\n"
+            "load,401,300\nsqrt,400,401\n"
+        )
+        memory = run(build(text))
+        self.assertEqual(memory.read(300), 4)
+        self.assertEqual(memory.read(400), 201)
+        self.assertEqual(memory.read(401), 300)
+
+    def test_result_can_replace_operand(self):
+        text = "op,b,c\nload,200,49\nload,400,200\nsqrt,400,400\n"
+        self.assertEqual(run(build(text)).read(200), 7)
+
+
 class CommandLineTest(unittest.TestCase):
     """Проверки запуска интерпретатора из командной строки."""
 
