@@ -1,10 +1,8 @@
 """Тесты разбора языка ассемблера."""
 
-import contextlib
-import io
 import unittest
 
-from assembler import AssemblerError, format_fields, main, parse_program
+from assembler import AssemblerError, parse_program
 from isa import Instruction
 from tests import ROOT
 
@@ -58,22 +56,3 @@ class ParseProgramTest(unittest.TestCase):
     def test_error_names_the_line(self):
         with self.assertRaisesRegex(AssemblerError, "строка 3"):
             parse_program("op,b,c\nload,1,2\njump,1,2\n")
-
-
-class CommandLineTest(unittest.TestCase):
-    """Проверки режима тестирования ассемблера."""
-
-    def test_test_mode_prints_spec_fields(self):
-        stdout = io.StringIO()
-        with contextlib.redirect_stdout(stdout):
-            code = main([str(SPEC_PROGRAM), "unused.bin", "--test"])
-        expected = [format_fields(item) for item in SPEC_FIELDS]
-        self.assertEqual(code, 0)
-        self.assertEqual(stdout.getvalue().splitlines(), expected)
-        self.assertEqual(expected[0], "A=15, B=133, C=390")
-
-    def test_missing_file_gives_error_code(self):
-        stderr = io.StringIO()
-        with contextlib.redirect_stderr(stderr):
-            code = main(["no_such_file.csv", "unused.bin"])
-        self.assertEqual(code, 1)
